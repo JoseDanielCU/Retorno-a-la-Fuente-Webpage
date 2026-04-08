@@ -45,14 +45,24 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           <Link href="/#servicios">Servicios</Link>
           <Link href="/#contacto">Contacto</Link>
+          <Link href="/#beneficios">Beneficios</Link>
 
           {user ? (
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-5 py-2 rounded-xl"
-            >
-              Cerrar sesión
-            </button>
+            <>
+              <Link
+                href="/dashboard"
+                className="hidden md:flex items-center gap-8"
+              >
+                Dashboard
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 text-white px-5 py-2 rounded-xl"
+              >
+                Cerrar sesión
+              </button>
+            </>
           ) : (
             <Link
               href="/auth"
@@ -84,9 +94,19 @@ export default function Navbar() {
           </Link>
 
           {user ? (
-            <button onClick={handleLogout}>Cerrar sesión</button>
+            <>
+              <Link href="/dashboard" onClick={() => setOpen(false)}>
+                Dashboard
+              </Link>
+
+              <button onClick={handleLogout}>
+                Cerrar sesión
+              </button>
+            </>
           ) : (
-            <Link href="/auth">Ingresar</Link>
+            <Link href="/auth" onClick={() => setOpen(false)}>
+              Ingresar
+            </Link>
           )}
         </div>
       )}
