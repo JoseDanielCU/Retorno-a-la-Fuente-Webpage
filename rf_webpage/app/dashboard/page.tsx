@@ -19,9 +19,11 @@ type Client = {
   created_by: string
 }
 
-type MedicalInfo = {
-  id?: string
+type Evaluation = {
+  id: string
   client_id: string
+  created_at: string
+  created_by?: string
   diabetes: boolean
   hypertension: boolean
   varices: boolean
@@ -44,7 +46,7 @@ const emptyClient: Omit<Client, "id" | "created_by"> = {
   occupation: "", eps: "", emi: "", start_date: "", end_date: "",
 }
 
-const emptyMedical: Omit<MedicalInfo, "id" | "client_id"> = {
+const emptyEvaluation: Omit<Evaluation, "id" | "client_id" | "created_at" | "created_by"> = {
   diabetes: false, hypertension: false, varices: false, heart_disease: false,
   other_diseases: "", allergies: "", medications: "", exercise_history: "",
   nutrition_history: "", observations: "", diagnosis: "", treatment: "",
@@ -155,12 +157,8 @@ function ClientForm({
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FieldGroup label="Cédula">
-  <Input
-    placeholder="Ej: 1234567890"
-    value={form.cedula}
-    onChange={(e) => setForm({ ...form, cedula: e.target.value })}
-  />
-</FieldGroup>
+          <Input placeholder="Ej: 1234567890" value={form.cedula} onChange={(e) => setForm({ ...form, cedula: e.target.value })} />
+        </FieldGroup>
         <FieldGroup label="Nombre completo">
           <Input placeholder="Ej: María González" value={form.name} onChange={set("name")} />
         </FieldGroup>
@@ -211,77 +209,75 @@ function ClientForm({
         </button>
       </div>
     </div>
-
   )
 }
 
-// ─── Medical Form ─────────────────────────────────────────────────────────────
-function MedicalForm({
-  form, setForm, onSubmit, onCancel, loading
+// ─── Evaluation Form ──────────────────────────────────────────────────────────
+function EvaluationForm({
+  form, setForm, onSubmit, onCancel, loading, isEdit = false
 }: {
-  form: typeof emptyMedical
-  setForm: (f: typeof emptyMedical) => void
+  form: typeof emptyEvaluation
+  setForm: (f: typeof emptyEvaluation) => void
   onSubmit: () => void
   onCancel: () => void
   loading?: boolean
+  isEdit?: boolean
 }) {
-  const setText = (k: keyof typeof emptyMedical) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const setText = (k: keyof typeof emptyEvaluation) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value })
-  const setNum = (k: keyof typeof emptyMedical) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const setNum = (k: keyof typeof emptyEvaluation) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [k]: Number(e.target.value) })
-  const toggleBool = (k: keyof typeof emptyMedical) => (v: boolean) =>
+  const toggleBool = (k: keyof typeof emptyEvaluation) => (v: boolean) =>
     setForm({ ...form, [k]: v })
 
   return (
     <div className="space-y-6">
-
-      {/* Antecedentes */}
       <div>
         <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Antecedentes médicos</p>
         <div className="flex flex-wrap gap-2">
-          <Toggle label="Diabetes" checked={form.diabetes} onChange={toggleBool("diabetes")} />
-          <Toggle label="Hipertensión" checked={form.hypertension} onChange={toggleBool("hypertension")} />
-          <Toggle label="Várices" checked={form.varices} onChange={toggleBool("varices")} />
-          <Toggle label="Cardiopatía" checked={form.heart_disease} onChange={toggleBool("heart_disease")} />
+          <Toggle label="Diabetes" checked={form.diabetes as boolean} onChange={toggleBool("diabetes")} />
+          <Toggle label="Hipertensión" checked={form.hypertension as boolean} onChange={toggleBool("hypertension")} />
+          <Toggle label="Várices" checked={form.varices as boolean} onChange={toggleBool("varices")} />
+          <Toggle label="Cardiopatía" checked={form.heart_disease as boolean} onChange={toggleBool("heart_disease")} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FieldGroup label="Otras enfermedades">
-          <Textarea placeholder="Describir si aplica…" value={form.other_diseases} onChange={setText("other_diseases")} />
+          <Textarea placeholder="Describir si aplica…" value={form.other_diseases as string} onChange={setText("other_diseases")} />
         </FieldGroup>
         <FieldGroup label="Alergias">
-          <Textarea placeholder="Medicamentos, alimentos, materiales…" value={form.allergies} onChange={setText("allergies")} />
+          <Textarea placeholder="Medicamentos, alimentos, materiales…" value={form.allergies as string} onChange={setText("allergies")} />
         </FieldGroup>
         <FieldGroup label="Medicamentos actuales">
-          <Textarea placeholder="Nombre y dosis…" value={form.medications} onChange={setText("medications")} />
+          <Textarea placeholder="Nombre y dosis…" value={form.medications as string} onChange={setText("medications")} />
         </FieldGroup>
         <FieldGroup label="Historial de ejercicio">
-          <Textarea placeholder="Tipo de actividad, frecuencia…" value={form.exercise_history} onChange={setText("exercise_history")} />
+          <Textarea placeholder="Tipo de actividad, frecuencia…" value={form.exercise_history as string} onChange={setText("exercise_history")} />
         </FieldGroup>
         <FieldGroup label="Historial nutricional">
-          <Textarea placeholder="Dieta habitual, restricciones…" value={form.nutrition_history} onChange={setText("nutrition_history")} />
+          <Textarea placeholder="Dieta habitual, restricciones…" value={form.nutrition_history as string} onChange={setText("nutrition_history")} />
         </FieldGroup>
         <FieldGroup label="Observaciones generales">
-          <Textarea placeholder="Notas adicionales…" value={form.observations} onChange={setText("observations")} />
+          <Textarea placeholder="Notas adicionales…" value={form.observations as string} onChange={setText("observations")} />
         </FieldGroup>
       </div>
 
       <div className="border-t border-gray-100 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FieldGroup label="Diagnóstico">
-          <Textarea placeholder="Diagnóstico clínico…" value={form.diagnosis} onChange={setText("diagnosis")} />
+          <Textarea placeholder="Diagnóstico clínico…" value={form.diagnosis as string} onChange={setText("diagnosis")} />
         </FieldGroup>
         <FieldGroup label="Tratamiento">
-          <Textarea placeholder="Plan de tratamiento…" value={form.treatment} onChange={setText("treatment")} />
+          <Textarea placeholder="Plan de tratamiento…" value={form.treatment as string} onChange={setText("treatment")} />
         </FieldGroup>
         <FieldGroup label="Paquete">
-          <Input placeholder="Ej: Paquete Relax 5 sesiones" value={form.package} onChange={setText("package")} />
+          <Input placeholder="Ej: Paquete Relax 5 sesiones" value={form.package as string} onChange={setText("package")} />
         </FieldGroup>
         <FieldGroup label="Nº de sesiones">
-          <Input type="number" min={0} value={form.sessions_count} onChange={setNum("sessions_count")} />
+          <Input type="number" min={0} value={form.sessions_count as number} onChange={setNum("sessions_count")} />
         </FieldGroup>
         <FieldGroup label="Valor total (COP)">
-          <Input type="number" min={0} step={1000} value={form.total_value} onChange={setNum("total_value")} />
+          <Input type="number" min={0} step={1000} value={form.total_value as number} onChange={setNum("total_value")} />
         </FieldGroup>
       </div>
 
@@ -294,27 +290,134 @@ function MedicalForm({
           disabled={loading}
           className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:brightness-110 transition disabled:opacity-50"
         >
-          {loading ? "Guardando…" : "Guardar ficha"}
+          {loading ? "Guardando…" : isEdit ? "Actualizar ficha" : "Guardar nueva evaluación"}
         </button>
       </div>
     </div>
   )
 }
 
+// ─── Evaluation History Card ──────────────────────────────────────────────────
+function EvaluationHistoryItem({
+  evaluation,
+  index,
+  onEdit,
+}: {
+  evaluation: Evaluation
+  index: number
+  onEdit: (ev: Evaluation) => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className="border border-gray-100 rounded-xl overflow-hidden">
+      {/* Header row */}
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition"
+      >
+        <div className="flex items-center gap-3">
+          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0
+            ${index === 0 ? "bg-primary text-white" : "bg-gray-100 text-gray-500"}`}>
+            {index === 0 ? "★" : index + 1}
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-gray-700">
+              {index === 0 ? "Evaluación actual" : `Evaluación ${index + 1}`}
+              {" · "}
+              <span className="font-normal text-gray-400">{formatDate(evaluation.created_at)}</span>
+            </p>
+            {evaluation.package && (
+              <p className="text-xs text-gray-400">{evaluation.package} · {evaluation.sessions_count} ses · {formatCurrency(evaluation.total_value)}</p>
+            )}
+          </div>
+        </div>
+        <span className={`text-gray-300 transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}>›</span>
+      </button>
+
+      {/* Expanded content */}
+      {expanded && (
+        <div className="px-4 pb-4 pt-1 border-t border-gray-100 space-y-3 text-sm">
+          {/* Antecedentes */}
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            <Badge label="Diabetes" active={evaluation.diabetes} />
+            <Badge label="Hipertensión" active={evaluation.hypertension} />
+            <Badge label="Várices" active={evaluation.varices} />
+            <Badge label="Cardiopatía" active={evaluation.heart_disease} />
+          </div>
+
+          {[
+            { label: "Otras enfermedades", value: evaluation.other_diseases },
+            { label: "Alergias", value: evaluation.allergies },
+            { label: "Medicamentos", value: evaluation.medications },
+            { label: "Historial de ejercicio", value: evaluation.exercise_history },
+            { label: "Historial nutricional", value: evaluation.nutrition_history },
+            { label: "Observaciones", value: evaluation.observations },
+            { label: "Diagnóstico", value: evaluation.diagnosis },
+            { label: "Tratamiento", value: evaluation.treatment },
+          ].filter(x => x.value).map(({ label, value }) => (
+            <div key={label}>
+              <p className="text-xs text-gray-400">{label}</p>
+              <p className="text-gray-700">{value}</p>
+            </div>
+          ))}
+
+          {evaluation.package && (
+            <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 grid grid-cols-3 gap-2">
+              <div>
+                <p className="text-xs text-gray-400">Paquete</p>
+                <p className="font-semibold text-gray-700 text-xs leading-tight">{evaluation.package}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">Sesiones</p>
+                <p className="font-semibold text-gray-700">{evaluation.sessions_count}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">Valor</p>
+                <p className="font-semibold text-gray-700 text-xs">{formatCurrency(evaluation.total_value)}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Edit button — only for correction purposes */}
+          <div className="flex justify-end pt-1">
+            <button
+              onClick={() => onEdit(evaluation)}
+              className="text-xs text-gray-400 hover:text-primary font-medium hover:underline transition"
+            >
+              ✏ Corregir datos
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Client Detail Panel ──────────────────────────────────────────────────────
 function ClientDetail({
-  client, medical, onEdit,onDelete, onMedical, onClose
+  client,
+  evaluations,
+  onEdit,
+  onDelete,
+  onNewEvaluation,
+  onEditEvaluation,
+  onClose,
 }: {
   client: Client
-  medical: MedicalInfo | null
+  evaluations: Evaluation[]
   onEdit: () => void
-  onDelete:() => void
-  onMedical: () => void
+  onDelete: () => void
+  onNewEvaluation: () => void
+  onEditEvaluation: (ev: Evaluation) => void
   onClose: () => void
 }) {
   const age = client.birth_date
     ? Math.floor((Date.now() - new Date(client.birth_date).getTime()) / 3.156e10)
     : null
+
+  const latestEval = evaluations[0] || null
 
   return (
     <div className="space-y-6">
@@ -332,6 +435,7 @@ function ClientDetail({
       {/* Info básica */}
       <div className="grid grid-cols-2 gap-3 text-sm">
         {[
+          { label: "Cédula", value: client.cedula },
           { label: "Teléfono", value: client.phone },
           { label: "Sexo", value: client.sex },
           { label: "EPS", value: client.eps },
@@ -346,61 +450,45 @@ function ClientDetail({
         ))}
       </div>
 
-      {/* Ficha clínica */}
+      {/* Evaluaciones */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ficha clínica</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+            Evaluaciones clínicas
+            {evaluations.length > 0 && (
+              <span className="ml-2 bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-xs font-bold">
+                {evaluations.length}
+              </span>
+            )}
+          </p>
           <button
-            onClick={onMedical}
+            onClick={onNewEvaluation}
             className="text-xs text-primary font-semibold hover:underline"
           >
-            {medical ? "Editar ficha" : "+ Crear ficha"}
+            + Nueva evaluación
           </button>
         </div>
 
-        {medical ? (
-          <div className="space-y-3 text-sm">
-            {/* Antecedentes */}
-            <div className="flex flex-wrap gap-1.5">
-              <Badge label="Diabetes" active={medical.diabetes} />
-              <Badge label="Hipertensión" active={medical.hypertension} />
-              <Badge label="Várices" active={medical.varices} />
-              <Badge label="Cardiopatía" active={medical.heart_disease} />
-            </div>
-
-            {[{ label: "Otras enfermedades", value: medical.other_diseases },
-              { label: "Alergias", value: medical.allergies },
-              { label: "Medicamentos", value: medical.medications },
-              { label: "Diagnóstico", value: medical.diagnosis },
-              { label: "Tratamiento", value: medical.treatment },
-            ].filter(x => x.value).map(({ label, value }) => (
-              <div key={label}>
-                <p className="text-xs text-gray-400">{label}</p>
-                <p className="text-gray-700">{value}</p>
-              </div>
-            ))}
-
-            {/* Paquete / sesiones / valor */}
-            {medical.package && (
-              <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 grid grid-cols-3 gap-2">
-                <div>
-                  <p className="text-xs text-gray-400">Paquete</p>
-                  <p className="font-semibold text-gray-700 text-xs leading-tight">{medical.package}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400">Sesiones</p>
-                  <p className="font-semibold text-gray-700">{medical.sessions_count}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400">Valor</p>
-                  <p className="font-semibold text-gray-700 text-xs">{formatCurrency(medical.total_value)}</p>
-                </div>
-              </div>
-            )}
+        {evaluations.length === 0 ? (
+          <div className="text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+            <p className="text-sm text-gray-400">Sin evaluaciones clínicas</p>
+            <button
+              onClick={onNewEvaluation}
+              className="mt-2 text-xs text-primary font-semibold hover:underline"
+            >
+              Crear primera evaluación →
+            </button>
           </div>
         ) : (
-          <div className="text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-            <p className="text-sm text-gray-400">Sin ficha clínica</p>
+          <div className="space-y-2">
+            {evaluations.map((ev, i) => (
+              <EvaluationHistoryItem
+                key={ev.id}
+                evaluation={ev}
+                index={i}
+                onEdit={onEditEvaluation}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -419,9 +507,8 @@ function ClientDetail({
             onClick={onEdit}
             className="px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-semibold hover:bg-primary/20 transition"
           >
-            Editar
+            Editar paciente
           </button>
-
           <button
             onClick={onDelete}
             className="px-4 py-2 rounded-lg bg-red-50 text-red-600 text-sm font-semibold hover:bg-red-100 transition"
@@ -437,7 +524,8 @@ function ClientDetail({
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [clients, setClients] = useState<Client[]>([])
-  const [medicalMap, setMedicalMap] = useState<Record<string, MedicalInfo>>({})
+  // evaluationsMap: client_id → Evaluation[] ordenado por created_at DESC
+  const [evaluationsMap, setEvaluationsMap] = useState<Record<string, Evaluation[]>>({})
   const [search, setSearch] = useState("")
   const [sexFilter, setSexFilter] = useState("")
   const [loading, setLoading] = useState(false)
@@ -445,71 +533,71 @@ export default function Dashboard() {
   // Modals
   const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
-  const [showMedical, setShowMedical] = useState(false)
+  const [showNewEvaluation, setShowNewEvaluation] = useState(false)
+  const [showEditEvaluation, setShowEditEvaluation] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
 
   const [selected, setSelected] = useState<Client | null>(null)
+  const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null)
   const [clientForm, setClientForm] = useState<typeof emptyClient>({ ...emptyClient })
-  const [medicalForm, setMedicalForm] = useState<typeof emptyMedical>({ ...emptyMedical })
+  const [evaluationForm, setEvaluationForm] = useState<typeof emptyEvaluation>({ ...emptyEvaluation })
 
   useEffect(() => { fetchClients() }, [])
 
   const fetchClients = async () => {
     const { data } = await supabase.from("clients").select("*").order("name")
     setClients(data || [])
-    if (data?.length) fetchMedical(data.map((c: Client) => c.id))
+    if (data?.length) fetchEvaluations(data.map((c: Client) => c.id))
   }
 
-  const fetchMedical = async (ids: string[]) => {
-    const { data } = await supabase.from("client_medical_info").select("*").in("client_id", ids)
-    const map: Record<string, MedicalInfo> = {}
-    ;(data || []).forEach((m: MedicalInfo) => { map[m.client_id] = m })
-    setMedicalMap(map)
+  const fetchEvaluations = async (ids: string[]) => {
+    const { data } = await supabase
+      .from("client_evaluations")
+      .select("*")
+      .in("client_id", ids)
+      .order("created_at", { ascending: false })
+
+    const map: Record<string, Evaluation[]> = {}
+    ;(data || []).forEach((ev: Evaluation) => {
+      if (!map[ev.client_id]) map[ev.client_id] = []
+      map[ev.client_id].push(ev)
+    })
+    setEvaluationsMap(map)
   }
 
   const filtered = clients.filter((c) => {
     const matchSearch =
-  c.name.toLowerCase().includes(search.toLowerCase()) ||
-  c.phone?.includes(search) ||
-  c.cedula?.includes(search) ||
-  c.occupation?.toLowerCase().includes(search.toLowerCase())
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.phone?.includes(search) ||
+      c.cedula?.includes(search) ||
+      c.occupation?.toLowerCase().includes(search.toLowerCase())
     const matchSex = sexFilter ? c.sex === sexFilter : true
     return matchSearch && matchSex
   })
 
   // ── Create client
   const handleCreate = async () => {
-  setLoading(true)
+    setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data, error } = await supabase
+      .from("clients")
+      .insert({ ...clientForm, created_by: user?.id })
+      .select()
 
-  const { data: { user } } = await supabase.auth.getUser()
+    if (error) { alert(error.message); setLoading(false); return }
 
-  const { data, error } = await supabase
-    .from("clients")
-    .insert({
-      ...clientForm,
-      created_by: user?.id,
-    })
-    .select()
-
-  console.log("INSERT RESULT:", data, error)
-
-  if (error) {
-    alert(error.message)
+    console.log("INSERT CLIENT:", data)
+    setShowCreate(false)
+    setClientForm({ ...emptyClient })
     setLoading(false)
-    return
+    fetchClients()
   }
-
-  setShowCreate(false)
-  setClientForm({ ...emptyClient })
-  setLoading(false)
-  fetchClients()
-}
 
   // ── Edit client
   const openEdit = (c: Client) => {
     setSelected(c)
     setClientForm({
-      cedula:c.cedula, name: c.name, phone: c.phone, birth_date: c.birth_date, sex: c.sex,
+      cedula: c.cedula, name: c.name, phone: c.phone, birth_date: c.birth_date, sex: c.sex,
       occupation: c.occupation, eps: c.eps, emi: c.emi,
       start_date: c.start_date, end_date: c.end_date,
     })
@@ -525,97 +613,129 @@ export default function Dashboard() {
     setLoading(false)
     fetchClients()
   }
-  // ── Delete Client
+
+  // ── Delete client
   const handleDelete = async () => {
-    console.log("CLICK DELETE")
     if (!selected) return
-
-    const confirmDelete = confirm(
-      `¿Seguro que quieres eliminar a ${selected.name}?`
-    )
-
+    const confirmDelete = confirm(`¿Seguro que quieres eliminar a ${selected.name}?\nSe borrarán también todas sus evaluaciones.`)
     if (!confirmDelete) return
 
     setLoading(true)
-
-    const { error } = await supabase
-      .from("clients")
-      .delete()
-      .eq("id", selected.id)
-
-    console.log("DELETE:", error)
-
+    // Las evaluaciones se borran en cascada si la FK tiene ON DELETE CASCADE
+    const { error } = await supabase.from("clients").delete().eq("id", selected.id)
     setLoading(false)
 
-    if (error) {
-      alert(error.message)
-      console.log("DELETE ERROR:", error)
-      return
-    }
+    if (error) { alert(error.message); return }
 
     setShowDetail(false)
     setSelected(null)
     fetchClients()
   }
-    // ── Open detail
-    const openDetail = (c: Client) => {
-      setSelected(c)
-      setShowDetail(true)
-    }
 
-  // ── Medical upsert
-  const openMedical = (c: Client) => {
+  // ── Open detail
+  const openDetail = (c: Client) => {
     setSelected(c)
-    const existing = medicalMap[c.id]
-    setMedicalForm(existing ? {
-      diabetes: existing.diabetes, hypertension: existing.hypertension,
-      varices: existing.varices, heart_disease: existing.heart_disease,
-      other_diseases: existing.other_diseases, allergies: existing.allergies,
-      medications: existing.medications, exercise_history: existing.exercise_history,
-      nutrition_history: existing.nutrition_history, observations: existing.observations,
-      diagnosis: existing.diagnosis, treatment: existing.treatment,
-      package: existing.package, sessions_count: existing.sessions_count,
-      total_value: existing.total_value,
-    } : { ...emptyMedical })
-    setShowMedical(true)
+    setShowDetail(true)
+  }
+
+  // ── New evaluation (INSERT — nunca sobreescribe)
+  const openNewEvaluation = (c: Client) => {
+    setSelected(c)
+    // Pre-poblar con la última evaluación para no perder antecedentes conocidos
+    const lastEval = (evaluationsMap[c.id] || [])[0]
+    if (lastEval) {
+      setEvaluationForm({
+        diabetes: lastEval.diabetes,
+        hypertension: lastEval.hypertension,
+        varices: lastEval.varices,
+        heart_disease: lastEval.heart_disease,
+        other_diseases: lastEval.other_diseases,
+        allergies: lastEval.allergies,
+        medications: lastEval.medications,
+        exercise_history: lastEval.exercise_history,
+        nutrition_history: lastEval.nutrition_history,
+        observations: "",        // observaciones frescas
+        diagnosis: "",           // diagnóstico fresco
+        treatment: "",           // tratamiento fresco
+        package: "",             // nuevo paquete
+        sessions_count: 0,
+        total_value: 0,
+      })
+    } else {
+      setEvaluationForm({ ...emptyEvaluation })
+    }
+    setShowNewEvaluation(true)
     setShowDetail(false)
   }
 
-  const handleMedical = async () => {
-  if (!selected) return
+  const handleNewEvaluation = async () => {
+    if (!selected) return
+    setLoading(true)
 
-  setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
 
-  const { data, error } = await supabase
-    .from("client_medical_info")
-    .upsert(
-      {
-        ...medicalForm,
-        client_id: selected.id
-      },
-      {
-        onConflict: "client_id"
-      }
-    )
-    .select()
+    const { data, error } = await supabase
+      .from("client_evaluations")
+      .insert({
+        ...evaluationForm,
+        client_id: selected.id,
+        created_by: user?.id,
+      })
+      .select()
 
-  console.log("MEDICAL UPSERT:", data, error)
+    if (error) { alert(error.message); setLoading(false); return }
 
-  if (error) {
-    alert(error.message)
+    console.log("INSERT EVALUATION:", data)
+    setShowNewEvaluation(false)
     setLoading(false)
-    return
+    fetchClients()
   }
 
-  setShowMedical(false)
-  setLoading(false)
-  fetchClients()
-}
+  // ── Edit evaluation (solo corrección de datos existentes)
+  const openEditEvaluation = (ev: Evaluation) => {
+    setSelectedEvaluation(ev)
+    setEvaluationForm({
+      diabetes: ev.diabetes,
+      hypertension: ev.hypertension,
+      varices: ev.varices,
+      heart_disease: ev.heart_disease,
+      other_diseases: ev.other_diseases,
+      allergies: ev.allergies,
+      medications: ev.medications,
+      exercise_history: ev.exercise_history,
+      nutrition_history: ev.nutrition_history,
+      observations: ev.observations,
+      diagnosis: ev.diagnosis,
+      treatment: ev.treatment,
+      package: ev.package,
+      sessions_count: ev.sessions_count,
+      total_value: ev.total_value,
+    })
+    setShowEditEvaluation(true)
+    setShowDetail(false)
+  }
+
+  const handleEditEvaluation = async () => {
+    if (!selectedEvaluation) return
+    setLoading(true)
+
+    const { error } = await supabase
+      .from("client_evaluations")
+      .update(evaluationForm)
+      .eq("id", selectedEvaluation.id)
+
+    if (error) { alert(error.message); setLoading(false); return }
+
+    setShowEditEvaluation(false)
+    setSelectedEvaluation(null)
+    setLoading(false)
+    fetchClients()
+  }
 
   // ── Stats
   const stats = {
     total: clients.length,
-    withMedical: Object.keys(medicalMap).length,
+    withEvaluations: Object.keys(evaluationsMap).length,
     active: clients.filter(c => c.end_date && new Date(c.end_date) >= new Date()).length,
   }
 
@@ -634,20 +754,19 @@ export default function Dashboard() {
         {/* ── Stats row */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Total pacientes", value: stats.total, color: "bg-primary/10 text-primary" },
-            { label: "Con ficha clínica", value: stats.withMedical, color: "bg-emerald-50 text-emerald-600" },
-            { label: "Activos", value: stats.active, color: "bg-amber-50 text-amber-600" },
+            { label: "Total pacientes", value: stats.total, color: "text-primary" },
+            { label: "Con evaluaciones", value: stats.withEvaluations, color: "text-emerald-600" },
+            { label: "Activos", value: stats.active, color: "text-amber-600" },
           ].map(({ label, value, color }) => (
             <div key={label} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
               <p className="text-xs text-gray-400 mb-1">{label}</p>
-              <p className={`text-2xl font-bold ${color.split(" ")[1]}`}>{value}</p>
+              <p className={`text-2xl font-bold ${color}`}>{value}</p>
             </div>
           ))}
         </div>
 
         {/* ── Toolbar */}
         <div className="flex flex-wrap gap-3 items-center mb-6">
-          {/* Search */}
           <div className="relative flex-1 min-w-50">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm">🔍</span>
             <input
@@ -659,7 +778,6 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Sex filter */}
           <select
             value={sexFilter}
             onChange={(e) => setSexFilter(e.target.value)}
@@ -671,7 +789,6 @@ export default function Dashboard() {
             <option value="Otro">Otro</option>
           </select>
 
-          {/* New client */}
           <button
             onClick={() => { setClientForm({ ...emptyClient }); setShowCreate(true) }}
             className="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:brightness-110 transition shadow-sm shadow-primary/20 whitespace-nowrap"
@@ -689,7 +806,8 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-2">
             {filtered.map((client) => {
-              const med = medicalMap[client.id]
+              const evals = evaluationsMap[client.id] || []
+              const latestEval = evals[0] || null
               const isActive = client.end_date && new Date(client.end_date) >= new Date()
               const age = client.birth_date
                 ? Math.floor((Date.now() - new Date(client.birth_date).getTime()) / 3.156e10)
@@ -713,25 +831,29 @@ export default function Dashboard() {
                       {isActive && (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-medium shrink-0">Activo</span>
                       )}
+                      {evals.length > 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium shrink-0">
+                          {evals.length} eval{evals.length > 1 ? "s" : ""}
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-gray-400 truncate">
                       {client.phone} {age ? `· ${age} años` : ""} {client.occupation ? `· ${client.occupation}` : ""}
                     </p>
                   </div>
 
-                  {/* Right side */}
+                  {/* Right side: latest eval */}
                   <div className="text-right shrink-0 hidden sm:block">
-                    {med ? (
+                    {latestEval ? (
                       <div className="text-xs text-gray-400">
-                        <p className="font-medium text-gray-600">{med.package || "Sin paquete"}</p>
-                        <p>{med.sessions_count} sesiones · {formatCurrency(med.total_value)}</p>
+                        <p className="font-medium text-gray-600">{latestEval.package || "Sin paquete"}</p>
+                        <p>{latestEval.sessions_count} sesiones · {formatCurrency(latestEval.total_value)}</p>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-300">Sin ficha clínica</span>
+                      <span className="text-xs text-gray-300">Sin evaluaciones</span>
                     )}
                   </div>
 
-                  {/* Arrow */}
                   <span className="text-gray-200 group-hover:text-primary transition shrink-0">›</span>
                 </div>
               )
@@ -742,7 +864,7 @@ export default function Dashboard() {
 
       {/* ─────── MODALS ─────── */}
 
-      {/* Create */}
+      {/* Create client */}
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Nuevo paciente">
         <ClientForm
           form={clientForm} setForm={setClientForm}
@@ -751,7 +873,7 @@ export default function Dashboard() {
         />
       </Modal>
 
-      {/* Edit */}
+      {/* Edit client */}
       <Modal open={showEdit} onClose={() => setShowEdit(false)} title="Editar paciente">
         <ClientForm
           form={clientForm} setForm={setClientForm}
@@ -765,21 +887,41 @@ export default function Dashboard() {
         {selected && (
           <ClientDetail
             client={selected}
-            medical={medicalMap[selected.id] || null}
+            evaluations={evaluationsMap[selected.id] || []}
             onEdit={() => openEdit(selected)}
             onDelete={handleDelete}
-            onMedical={() => openMedical(selected)}
+            onNewEvaluation={() => openNewEvaluation(selected)}
+            onEditEvaluation={openEditEvaluation}
             onClose={() => setShowDetail(false)}
           />
         )}
       </Modal>
 
-      {/* Medical */}
-      <Modal open={showMedical} onClose={() => setShowMedical(false)} title={`Ficha clínica · ${selected?.name || ""}`} maxW="max-w-2xl">
-        <MedicalForm
-          form={medicalForm} setForm={setMedicalForm}
-          onSubmit={handleMedical} onCancel={() => setShowMedical(false)}
-          loading={loading}
+      {/* Nueva evaluación */}
+      <Modal
+        open={showNewEvaluation}
+        onClose={() => setShowNewEvaluation(false)}
+        title={`Nueva evaluación · ${selected?.name || ""}`}
+        maxW="max-w-2xl"
+      >
+        <EvaluationForm
+          form={evaluationForm} setForm={setEvaluationForm}
+          onSubmit={handleNewEvaluation} onCancel={() => setShowNewEvaluation(false)}
+          loading={loading} isEdit={false}
+        />
+      </Modal>
+
+      {/* Corregir evaluación */}
+      <Modal
+        open={showEditEvaluation}
+        onClose={() => setShowEditEvaluation(false)}
+        title={`Corregir evaluación · ${formatDate(selectedEvaluation?.created_at || "")}`}
+        maxW="max-w-2xl"
+      >
+        <EvaluationForm
+          form={evaluationForm} setForm={setEvaluationForm}
+          onSubmit={handleEditEvaluation} onCancel={() => setShowEditEvaluation(false)}
+          loading={loading} isEdit={true}
         />
       </Modal>
     </main>
